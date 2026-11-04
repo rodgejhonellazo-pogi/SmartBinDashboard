@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartBinDashboard/SmartBinDashboard.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+</Solution>
