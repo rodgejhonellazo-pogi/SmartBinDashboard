@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Waste Segregator Portal & Dashboard</title>
+    <style>
+        :root {
+            --bg-portal-left: #11382b;
+            --bg-portal-right: #f0f2ee;
+            --bg-dark-card: #1a1a1a;
+            --bg-dark-page: #121212;
+            --text-light: #ffffff;
+            --text-dark: #1f2937;
+            --primary-green: #155742;
+            --accent-orange: #ff9800;
+            --accent-green: #4caf50;
+            --border-dark: #2d2d2d;
+            --bg-input: #262626;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100%;
+            background-color: var(--bg-portal-right);
+        }
+
+        .view-section {
+            display: none;
+            height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+            .view-section.active {
+                display: flex !important;
+            }
+
+        /* 1. Portal Split Screen Styles */
+        #portal-view {
+            flex-direction: row;
+        }
+
+        .portal-left {
+            flex: 1;
+            background-color: var(--bg-portal-left);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10% 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .portal-left h1 {
+                font-size: 3.5rem;
+                line-height: 1.1;
+                margin-bottom: 20px;
+                font-weight: 700;
+            }
+
+            .portal-left p {
+                font-size: 1.1rem;
+                opacity: 0.8;
+                max-width: 400px;
+            }
+
+        .portal-right {
+            flex: 1;
+            background-color: var(--bg-portal-right);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5%;
+        }
+
+        .portal-menu-box {
+            width: 100%;
+            max-width: 450px;
+        }
+
+            .portal-menu-box h2 {
+                font-size: 2rem;
+                color: var(--text-dark);
+                margin-bottom: 10px;
+            }
+
+            .portal-menu-box p {
+                color: #6b7280;
+                margin-bottom: 30px;
+            }
+
+        .nav-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+            .nav-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-card.dark {
+                background-color: var(--primary-green);
+                color: var(--text-light);
+            }
+
+            .nav-card h3 {
+                margin: 0 0 5px 0;
+                font-size: 1.2rem;
+            }
+
+            .nav-card p {
+                margin: 0;
+                font-size: 0.9rem;
+                opacity: 0.8;
+                color: inherit;
+            }
+
+        /* 2. Login View Dark Theme Styles */
+        #login-view {
+            background-color: var(--bg-dark-page);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            background-color: var(--bg-dark-card);
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            padding: 40px;
+            width: 100%;
+            max-width: 650px;
+            box-sizing: border-box;
+        }
+
+            .login-card h2 {
+                color: var(--text-light);
+                font-size: 24px;
+                margin-top: 0;
+                margin-bottom: 25px;
+            }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                color: #aaaaaa;
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 12px;
+                background-color: var(--bg-input);
+                border: 1px solid #3d3d3d;
+                border-radius: 4px;
+                color: var(--text-light);
+                font-size: 14px;
+                box-sizing: border-box;
+            }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-login {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .btn-staff {
+            background-color: var(--accent-orange);
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #555555;
+            color: white;
+        }
+
+        /* 3. Dashboard Styles */
+        #dashboard-view {
+            flex-direction: column;
+            background-color: #f7f9f6;
+            overflow-y: auto;
+            padding: 30px;
+            height: auto;
+            min-height: 100vh;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #e5e7eb;
+        }
+
+        .admin-controls {
+            display: none; /* Ipinapakita lang ng JS kapag admin */
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Bin graphic na may fill level */
+        .bin-graphic {
+            position: relative;
+            overflow: hidden;
+            width: 60px;
+            height: 100px;
+            border: 3px solid #000;
+            border-radius: 8px;
+            margin-right: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .bin-fill {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+            background: #4caf50;
+            transition: height 0.4s ease, background-color 0.4s ease;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+            .history-table th, .history-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+        /* Simulation panel (now sits below the history) */
+        .sim-panel {
+            border: 2px dashed #ff9800;
+            background: #fffaf0;
+            margin-top: 20px;
+        }
+
+        .sim-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 15px 0;
+        }
+
+        .sim-row input[type=range] {
+            width: 100%;
+        }
+
+        .sim-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag-sorted { background: #e8f5e9; color: #2e7d32; }
+        .tag-collected { background: #e3f2fd; color: #1565c0; }
+        .tag-full { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+
+    <!-- VIEW 1: PORTAL VIEW -->
+    <div id="portal-view" class="view-section active">
+        <div class="portal-left">
+            <div class="logo" style="font-weight:bold; font-size:1.2rem; margin-bottom:40px;">█ Smart Waste Segregator</div>
+            <h1>Know when your bins are full.</h1>
+            <p>Live bin levels, automatic sorting records, and collection logs in one place.</p>
+        </div>
+        <div class="portal-right">
+            <div class="portal-menu-box">
+                <h2>Choose how to continue</h2>
+                <p>Staff can view bin status. Admins can also record collections.</p>
+
+                <div class="nav-card" id="btnEnterStaff">
+                    <h3>Enter staff view</h3>
+                    <p>View bin levels and history</p>
+                </div>
+
+                <div class="nav-card dark" id="btnGoToLogin">
+                    <h3>Admin login</h3>
+                    <p>Manage bins and collections</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: LOGIN VIEW (DARK CARD THEME) -->
+    <div id="login-view" class="view-section">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <div style="color: #ff6b6b; font-size: 14px; margin-bottom: 15px; display: none;" id="login-error">
+                Incorrect credentials.
+            </div>
+            <div class="btn-group">
+                <button class="btn-login" id="btnSubmitLogin">Log in</button>
+                <button class="btn-staff" id="btnStaffViewFromLogin">Enter staff view</button>
+                <button class="btn-cancel" id="btnCancelLogin">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: DASHBOARD VIEW -->
+    <div id="dashboard-view" class="view-section">
+        <div class="dash-header">
+            <div>
+                <h1 style="margin:0;">Waste Segregator Dashboard</h1>
+                <p style="margin:5px 0 0 0; color:#6b7280;">● Live bin monitoring and AI sorting</p>
+            </div>
+            <div>
+                <span id="role-badge" style="background:#e5e7eb; padding:6px 12px; border-radius:20px; font-size:14px; margin-right:10px;">Staff view</span>
+                <button id="btnExitView" style="background:#ef4444; color:white; padding:8px 16px; border-radius:6px;">Exit view</button>
+            </div>
+        </div>
+
+        <!-- ADMIN ONLY: Bin management -->
+        <div id="admin-panel" class="dash-card admin-controls" style="margin-bottom:20px;">
+            <h3>Bin management</h3>
+            <button class="btn-login" onclick="collectBin('Bio')">Collect Bio</button>
+            <button class="btn-staff" onclick="collectBin('Non-Bio')">Collect Non-Bio</button>
+            <button style="background:#1f2937; color:white;" onclick="collectBin('Both')">Collect Both Bins</button>
+            <button style="background:#ef4444; color:white; margin-left:20px;" onclick="clearHistory()">Clear history</button>
+        </div>
+
+        <div class="grid-container">
+            <div class="dash-card">
+                <div class="bin-graphic" style="border-color:#4caf50;"><div class="bin-fill" id="fillBio"></div></div>
+                <div style="display:inline-block; vertical-align:middle;">
+                    <h4 style="margin:0; color:#6b7280;">Biodegradable capacity</h4>
+                    <h2 style="margin:5px 0;" id="txtBioCap">0%</h2>
+                    <p style="margin:0; font-size:14px; color:#4caf50;" id="statusBio">Plenty of space</p>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="bin-graphic" style="border-color:#1f2937;"><div class="bin-fill" id="fillNonBio"></div></div>
+                <div style="display:inline-block; vertical-align:middle;">
+                    <h4 style="margin:0; color:#6b7280;">Non-biodegradable capacity</h4>
+                    <h2 style="margin:5px 0;" id="txtNonBioCap">0%</h2>
+                    <p style="margin:0; font-size:14px; color:#4caf50;" id="statusNonBio">Plenty of space</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="dash-card">
+                <h4 style="margin:0; color:#6b7280;">Biodegradable collected (items)</h4>
+                <h2 style="margin:10px 0 0 0; color:#4caf50;" id="countBio">0</h2>
+            </div>
+            <div class="dash-card">
+                <h4 style="margin:0; color:#6b7280;">Non-biodegradable collected (items)</h4>
+                <h2 style="margin:10px 0 0 0; color:#1f2937;" id="countNonBio">0</h2>
+            </div>
+            <div class="dash-card">
+                <h4 style="margin:0; color:#6b7280;">Last automatic segregation</h4>
+                <h2 style="margin:10px 0 0 0; color:#ff9800; font-size:1.2rem;" id="txtLastSeg">None yet</h2>
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <h3>Waste collection history</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date & time logged</th>
+                        <th>Waste category</th>
+                        <th>Segregation status</th>
+                    </tr>
+                </thead>
+                <tbody id="history-logs">
+                    <tr>
+                        <td colspan="4" style="text-align:center; color:#9ca3af;">No items logged yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ADMIN ONLY: Simulation panel (moved below the history) -->
+        <div id="sim-panel" class="dash-card sim-panel admin-controls">
+            <h3 style="margin-top:0;">🧪 Simulation (admin only)</h3>
+            <p style="margin:0; color:#6b7280; font-size:14px;">
+                I-set ang bin levels para makita kung ano ang mangyayari sa dashboard at history
+                kapag nag-collect. Hindi ito makikita ng staff.
+            </p>
+
+            <div class="sim-row">
+                <div>
+                    <label for="simBio"><b>Biodegradable level:</b> <span id="simBioVal">0</span>%</label>
+                    <input type="range" id="simBio" min="0" max="100" step="5" value="0">
+                </div>
+                <div>
+                    <label for="simNonBio"><b>Non-biodegradable level:</b> <span id="simNonBioVal">0</span>%</label>
+                    <input type="range" id="simNonBio" min="0" max="100" step="5" value="0">
+                </div>
+            </div>
+
+            <div class="sim-buttons">
+                <button style="background:#1f2937; color:white;" onclick="setBothLevels(80)">Set both to 80%</button>
+                <button style="background:#c62828; color:white;" onclick="setBothLevels(100)">Set both to 100%</button>
+                <button class="btn-cancel" onclick="setBothLevels(0)">Reset both to 0%</button>
+            </div>
+
+            <div class="sim-buttons">
+                <button class="btn-login" onclick="simulateItem('Biodegradable')">+ Simulate Bio item</button>
+                <button class="btn-staff" onclick="simulateItem('Non-biodegradable')">+ Simulate Non-Bio item</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT: nasa app.js (dapat magkatabi sa iisang folder ang index.html at app.js) -->
+    <script src="app.js"></script>
+</body>
+</html>
