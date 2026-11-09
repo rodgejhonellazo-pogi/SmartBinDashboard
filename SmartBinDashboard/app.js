@@ -227,3 +227,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
     render();
 });
+
+// Establish real-time communication line with the Node.js server
+const socket = io();
+
+// Listen to the live 'trashDetected' event broadcasted by the ESP32-CAM AI system
+socket.on('trashDetected', (data) => {
+    console.log("[LIVE DATA] Waste item detected by AI:", data);
+
+    // Dynamic UI Notifications (Professional Theme)
+    if (data.type === 'biodegradable') {
+        alert(`Notification: A biodegradable item was successfully processed at ${data.timestamp}`);
+
+        // OPTIONAL: If you have an HTML counter element, update it here:
+        // const bioCounter = document.getElementById('bio-count-element');
+        // if (bioCounter) bioCounter.innerText = parseInt(bioCounter.innerText) + 1;
+
+    } else if (data.type === 'non_biodegradable') {
+        alert(`Notification: A non-biodegradable item was successfully processed at ${data.timestamp}`);
+
+        // OPTIONAL: If you have an HTML counter element, update it here:
+        // const nonBioCounter = document.getElementById('non-bio-count-element');
+        // if (nonBioCounter) nonBioCounter.innerText = parseInt(nonBioCounter.innerText) + 1;
+    }
+
+    // EXCLUSIVE SUGGESTION FOR THESIS CHARTS:
+    // If you are using Chart.js on your dashboard, you can trigger a live redraw function here:
+    // if (typeof updateDashboardCharts === 'function') { updateDashboardCharts(data.type); }
+});
