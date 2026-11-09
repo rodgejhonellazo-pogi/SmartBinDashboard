@@ -281,11 +281,11 @@
                 border-bottom: 1px solid #e5e7eb;
             }
 
-        /* Simulation panel (now sits below the history) */
+        /* Simulation panel */
         .sim-panel {
             border: 2px dashed #ff9800;
             background: #fffaf0;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .sim-row {
@@ -295,9 +295,9 @@
             margin: 15px 0;
         }
 
-        .sim-row input[type=range] {
-            width: 100%;
-        }
+            .sim-row input[type=range] {
+                width: 100%;
+            }
 
         .sim-buttons {
             display: flex;
@@ -314,9 +314,20 @@
             font-weight: 600;
         }
 
-        .tag-sorted { background: #e8f5e9; color: #2e7d32; }
-        .tag-collected { background: #e3f2fd; color: #1565c0; }
-        .tag-full { background: #ffebee; color: #c62828; }
+        .tag-sorted {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .tag-collected {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .tag-full {
+            background: #ffebee;
+            color: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -391,6 +402,37 @@
             <button style="background:#ef4444; color:white; margin-left:20px;" onclick="clearHistory()">Clear history</button>
         </div>
 
+        <!-- ADMIN ONLY: Simulation panel -->
+        <div id="sim-panel" class="dash-card sim-panel admin-controls">
+            <h3 style="margin-top:0;">🧪 Simulation (admin only)</h3>
+            <p style="margin:0; color:#6b7280; font-size:14px;">
+                I-set ang bin levels para makita kung ano ang mangyayari sa dashboard at history
+                kapag nag-collect. Hindi ito makikita ng staff.
+            </p>
+
+            <div class="sim-row">
+                <div>
+                    <label for="simBio"><b>Biodegradable level:</b> <span id="simBioVal">0</span>%</label>
+                    <input type="range" id="simBio" min="0" max="100" step="5" value="0">
+                </div>
+                <div>
+                    <label for="simNonBio"><b>Non-biodegradable level:</b> <span id="simNonBioVal">0</span>%</label>
+                    <input type="range" id="simNonBio" min="0" max="100" step="5" value="0">
+                </div>
+            </div>
+
+            <div class="sim-buttons">
+                <button style="background:#1f2937; color:white;" onclick="setBothLevels(80)">Set both to 80%</button>
+                <button style="background:#c62828; color:white;" onclick="setBothLevels(100)">Set both to 100%</button>
+                <button class="btn-cancel" onclick="setBothLevels(0)">Reset both to 0%</button>
+            </div>
+
+            <div class="sim-buttons">
+                <button class="btn-login" onclick="simulateItem('Biodegradable')">+ Simulate Bio item</button>
+                <button class="btn-staff" onclick="simulateItem('Non-biodegradable')">+ Simulate Non-Bio item</button>
+            </div>
+        </div>
+
         <div class="grid-container">
             <div class="dash-card">
                 <div class="bin-graphic" style="border-color:#4caf50;"><div class="bin-fill" id="fillBio"></div></div>
@@ -443,40 +485,13 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- ADMIN ONLY: Simulation panel (moved below the history) -->
-        <div id="sim-panel" class="dash-card sim-panel admin-controls">
-            <h3 style="margin-top:0;">🧪 Simulation (admin only)</h3>
-            <p style="margin:0; color:#6b7280; font-size:14px;">
-                I-set ang bin levels para makita kung ano ang mangyayari sa dashboard at history
-                kapag nag-collect. Hindi ito makikita ng staff.
-            </p>
-
-            <div class="sim-row">
-                <div>
-                    <label for="simBio"><b>Biodegradable level:</b> <span id="simBioVal">0</span>%</label>
-                    <input type="range" id="simBio" min="0" max="100" step="5" value="0">
-                </div>
-                <div>
-                    <label for="simNonBio"><b>Non-biodegradable level:</b> <span id="simNonBioVal">0</span>%</label>
-                    <input type="range" id="simNonBio" min="0" max="100" step="5" value="0">
-                </div>
-            </div>
-
-            <div class="sim-buttons">
-                <button style="background:#1f2937; color:white;" onclick="setBothLevels(80)">Set both to 80%</button>
-                <button style="background:#c62828; color:white;" onclick="setBothLevels(100)">Set both to 100%</button>
-                <button class="btn-cancel" onclick="setBothLevels(0)">Reset both to 0%</button>
-            </div>
-
-            <div class="sim-buttons">
-                <button class="btn-login" onclick="simulateItem('Biodegradable')">+ Simulate Bio item</button>
-                <button class="btn-staff" onclick="simulateItem('Non-biodegradable')">+ Simulate Non-Bio item</button>
-            </div>
-        </div>
     </div>
+
+    <!-- REAL-TIME COMMUNICATION SOCKET INJECTOR -->
+    <script src="/socket.io/socket.io.js"></script>
 
     <!-- SCRIPT: nasa app.js (dapat magkatabi sa iisang folder ang index.html at app.js) -->
     <script src="app.js"></script>
 </body>
 </html>
+
