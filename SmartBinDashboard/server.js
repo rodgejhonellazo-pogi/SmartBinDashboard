@@ -8,8 +8,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Initialize Firebase Admin (Ensure serviceAccountKey.json is in your root project folder)
-const serviceAccount = require('./serviceAccountKey.json');
+// Initialize Firebase Admin
+// On Render: set the FIREBASE_SERVICE_ACCOUNT environment variable (full JSON).
+// On localhost: falls back to ./serviceAccountKey.json (do NOT commit this file).
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+  : require('./serviceAccountKey.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -33,7 +37,7 @@ app.get('/api/bin-status', async (req, res) => {
     if (snapshot.empty) {
       return res.status(404).json({ message: 'No data found' });
     }
-    const data = snapshot.docs.data();
+    const data = snapshot.docs[0].data(); // fixed: docs is an array
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,10 +53,10 @@ app.post('/api/update-bin', async (req, res) => {
       timestamp: admin.firestore.FieldValue.serverTimestamp()
     };
     await db.collection('bin_status').add(newData);
-    
+
     // Broadcast manual API updates to the dashboard interface
     io.emit('binStatusUpdated', newData);
-    
+
     res.status(200).json({ message: 'Success', data: newData });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -65,8 +69,8 @@ try {
   // Dynamically load SerialPort only if available (Localhost mode)
   SerialPort = require('serialport').SerialPort;
   const { ReadlineParser } = require('@serialport/parser-readline');
-  
-  const serialPortPath = 'COM3'; 
+
+  const serialPortPath = 'COM3';
   const mySerialPort = new SerialPort({ path: serialPortPath, baudRate: 115200 });
   const parser = mySerialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
