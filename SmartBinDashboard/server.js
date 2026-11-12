@@ -99,7 +99,10 @@ app.post('/api/detection', async (req, res) => {
     console.log(`[DETECTION] ${trashType} logged from ESP32-CAM.`);
 
     // Send the detection to the dashboard in real time
-    io.emit('trashDetected', { type: trashType, timestamp: new Date().toLocaleTimeString() });
+    io.emit('trashDetected', {
+  type: trashType,
+  timestamp: new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Manila' })
+});
 
     res.status(200).json({ message: 'Success' });
   } catch (error) {
