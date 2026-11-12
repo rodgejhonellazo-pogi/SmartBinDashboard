@@ -1,8 +1,8 @@
 const express = require('express');
 const admin = require('firebase-admin');
 const path = require('path');
-const http = require('http'); // Required wrapper for Socket.io
-const { Server } = require('socket.io'); // Required for real-time UI web sockets
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
@@ -21,29 +21,30 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Middleware Configurations
+// Parse JSON request bodies and serve the files in the public folder
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- SERVE MAIN DASHBOARD ---
+// Serve the main dashboard page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// --- API ENDPOINTS (Preserved Core Repository Routing) ---
+// Get the latest bin status from Firestore
 app.get('/api/bin-status', async (req, res) => {
   try {
     const snapshot = await db.collection('bin_status').orderBy('timestamp', 'desc').limit(1).get();
     if (snapshot.empty) {
       return res.status(404).json({ message: 'No data found' });
     }
-    const data = snapshot.docs[0].data(); // fixed: docs is an array
+    const data = snapshot.docs[0].data();
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+// Save a new bin fill level and notify the dashboard
 app.post('/api/update-bin', async (req, res) => {
   try {
     const { fill_level, status } = req.body;
@@ -54,7 +55,7 @@ app.post('/api/update-bin', async (req, res) => {
     };
     await db.collection('bin_status').add(newData);
 
-    // Broadcast manual API updates to the dashboard interface
+    // Send the update to the dashboard in real time
     io.emit('binStatusUpdated', newData);
 
     res.status(200).json({ message: 'Success', data: newData });
@@ -63,10 +64,53 @@ app.post('/api/update-bin', async (req, res) => {
   }
 });
 
-// --- DYNAMIC HARDWARE BYPASS DETECTOR FOR CLOUD COMPATIBILITY ---
+// Receive a detection result from the ESP32-CAM over WiFi
+app.post('/api/detection', async (req, res) => {
+  try {
+    // Check the device API key sent in the request header
+    const key = req.headers['x-api-key'];
+    if (!process.env.DEVICE_API_KEY || key !== process.env.DEVICE_API_KEY) {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+
+    const { label, bioScore, nonBioScore } = req.body;
+
+    // Convert the label to the waste type used by the dashboard
+    let trashType = '';
+    const l = String(label || '').toLowerCase();
+    if (l === 'biodegradable') {
+      trashType = 'biodegradable';
+    } else if (l === 'non-biodegradable' || l === 'non_biodegradable') {
+      trashType = 'non_biodegradable';
+    }
+
+    if (!trashType) {
+      return res.status(400).json({ error: 'Invalid label' });
+    }
+
+    // Save the detection to the waste log collection
+    const logData = {
+      type: trashType,
+      bioScore: Number(bioScore) || 0,
+      nonBioScore: Number(nonBioScore) || 0,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    };
+    await db.collection('waste_logs').add(logData);
+    console.log(`[DETECTION] ${trashType} logged from ESP32-CAM.`);
+
+    // Send the detection to the dashboard in real time
+    io.emit('trashDetected', { type: trashType, timestamp: new Date().toLocaleTimeString() });
+
+    res.status(200).json({ message: 'Success' });
+  } catch (error) {
+    console.error('[DETECTION ERROR]', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Read detections from a USB serial port (local use only, skipped on the cloud)
 let SerialPort;
 try {
-  // Dynamically load SerialPort only if available (Localhost mode)
   SerialPort = require('serialport').SerialPort;
   const { ReadlineParser } = require('@serialport/parser-readline');
 
@@ -76,6 +120,7 @@ try {
 
   console.log(`[SERIAL] Connection established successfully on port: ${serialPortPath}`);
 
+  // Handle each line of text received from the board
   parser.on('data', async (data) => {
     const cleanData = data.trim().toUpperCase();
     console.log(`[ESP32-CAM RAW DATA]: ${cleanData}`);
@@ -102,11 +147,12 @@ try {
   console.log("[SERIAL NOTICE] Running in cloud production environment. Hardware module bypassed safely.");
 }
 
-// Global Socket.io Stream Connection Monitor
+// Log when a dashboard client connects to the live stream
 io.on('connection', (socket) => {
   console.log('[SOCKET] Client device connected to the live stream dashboard panel.');
 });
 
+// Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
