@@ -125,7 +125,7 @@ function collectBin(categoryType) {
     }
 
     if (!collectedSomething) {
-        alert('Walang laman ang napiling bin. Wala pang ico-collect.');
+        alert('Empty Bin.');
     }
     render();
 }
@@ -156,7 +156,7 @@ function simulateItem(category) {
 }
 
 function clearHistory() {
-    if (!confirm('Sigurado ka bang buburahin ang lahat ng history at collected counters?')) {
+    if (!confirm('Are you sure you want to delete history?')) {
         return;
     }
     wasteHistory = [];
